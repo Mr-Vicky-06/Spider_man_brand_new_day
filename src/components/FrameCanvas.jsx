@@ -24,7 +24,7 @@ export default function FrameCanvas({
 }) {
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
-  const { img, meta, ready } = useAtlas(name);
+  const { pages, meta, ready } = useAtlas(name);
 
   useEffect(() => {
     if (!ready) return;
@@ -94,10 +94,10 @@ export default function FrameCanvas({
     }
 
     function blit(index, alpha) {
-      const [sx, sy, sw, sh] = cellRect(meta, index);
+      const [page, sx, sy, sw, sh] = cellRect(meta, index);
       const [dx, dy, dw, dh] = place(sw, sh);
       ctx.globalAlpha = alpha;
-      ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+      ctx.drawImage(pages[page], sx, sy, sw, sh, dx, dy, dw, dh);
     }
 
     function draw(fi) {
@@ -164,7 +164,7 @@ export default function FrameCanvas({
       ro.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [ready, img, meta, progressRef, ease, focusY, fit, zoom, onReady]);
+  }, [ready, pages, meta, progressRef, ease, focusY, fit, zoom, onReady]);
 
   return (
     <div ref={wrapRef} className={`frame-canvas ${ready ? 'is-ready' : ''} ${className}`}>

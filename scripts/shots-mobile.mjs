@@ -6,7 +6,7 @@ const browser = await puppeteer.launch({
 const page = await browser.newPage();
 await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
 const errs = []; page.on('pageerror', e => errs.push(e.message));
-await page.goto('http://localhost:5174/', { waitUntil: 'networkidle0' });
+await page.goto('http://localhost:5174/solo-leveling-/', { waitUntil: 'networkidle0' });
 await new Promise(r => setTimeout(r, 2500));
 
 const at = async (sel, off = 0) =>

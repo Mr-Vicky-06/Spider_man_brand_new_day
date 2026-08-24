@@ -25,8 +25,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RAW = os.path.join(os.path.dirname(ROOT), "_raw")
 OUT = os.path.join(ROOT, "public", "frames")
 
-CELL_W = 576          # full-atlas cell width; .half is derived from this
-COLS = 9
+CELL_W = 960          # full-atlas cell width; .half is derived from this
+PAGE_COLS = 4
+PAGE_ROWS = 6         # 24 frames per page
+
 INK = np.array([0.02, 0.03, 0.06])
 
 # analysis resolution for tracking / measurement
@@ -63,27 +65,40 @@ def load(path):
 
 
 def atlas_of(frames, name, quality):
-    """Write `frames` (PIL images, uniform size) as full + half webp atlases."""
+    """Write `frames` as paged webp sprite atlases, full size and half size.
+
+    One sheet cannot hold a sequence at usable resolution: 80 frames at 960px
+    is ~41 Mpx, well past the ~16.7 Mpx a single image is allowed to decode on
+    iOS Safari. Splitting into pages keeps every sheet small enough to decode
+    while letting each frame stay close to its source resolution.
+    """
+    per_page = PAGE_COLS * PAGE_ROWS
+    pages = (len(frames) + per_page - 1) // per_page
     cw, ch = frames[0].size
-    rows = (len(frames) + COLS - 1) // COLS
     meta_cell = None
 
     for suffix, scale in (("", 1.0), (".half", 0.5)):
         w, h = int(cw * scale), int(ch * scale)
-        sheet = Image.new("RGB", (w * COLS, h * rows), (0, 0, 0))
-        for i, im in enumerate(frames):
-            if scale != 1.0:
-                im = im.resize((w, h), Image.LANCZOS)
-            sheet.paste(im, ((i % COLS) * w, (i // COLS) * h))
-        path = os.path.join(OUT, f"{name}{suffix}.webp")
-        sheet.save(path, "WEBP", quality=quality, method=6)
-        print(f"  {os.path.basename(path):22} {sheet.size[0]}x{sheet.size[1]}"
-              f"  {os.path.getsize(path)/1024:7.0f} KB")
+        total = 0
+        for pg in range(pages):
+            chunk = frames[pg * per_page:(pg + 1) * per_page]
+            rows = (len(chunk) + PAGE_COLS - 1) // PAGE_COLS
+            sheet = Image.new("RGB", (w * PAGE_COLS, h * rows), (0, 0, 0))
+            for i, im in enumerate(chunk):
+                if scale != 1.0:
+                    im = im.resize((w, h), Image.LANCZOS)
+                sheet.paste(im, ((i % PAGE_COLS) * w, (i // PAGE_COLS) * h))
+            path = os.path.join(OUT, f"{name}-{pg}{suffix}.webp")
+            sheet.save(path, "WEBP", quality=quality, method=6)
+            total += os.path.getsize(path)
+        px = w * PAGE_COLS * h * PAGE_ROWS / 1e6
+        print(f"  {name}{suffix or ' '}: {pages} pages, {w}x{h} cells, "
+              f"{px:.1f} Mpx/page, {total/1024:.0f} KB")
         if suffix == "":
             meta_cell = [w, h]
 
-    return {"file": f"{name}.webp", "cols": COLS, "rows": rows,
-            "count": len(frames), "cell": meta_cell}
+    return {"name": name, "pages": pages, "perPage": per_page,
+            "cols": PAGE_COLS, "count": len(frames), "cell": meta_cell}
 
 
 # ── 01 awaken: key the white background out to ink ────────────────────────

@@ -9,7 +9,7 @@ await page.setViewport({ width: 1440, height: 900 });
 const errs = [];
 page.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
 page.on('pageerror', e => errs.push('PAGEERROR ' + e.message));
-await page.goto('http://localhost:5174/', { waitUntil: 'networkidle0' });
+await page.goto('http://localhost:5174/solo-leveling-/', { waitUntil: 'networkidle0' });
 await new Promise(r => setTimeout(r, 2500));
 
 const vh = 900;

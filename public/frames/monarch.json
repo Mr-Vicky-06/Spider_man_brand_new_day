@@ -1,11 +1,12 @@
 {
-  "file": "monarch.webp",
-  "cols": 9,
-  "rows": 9,
+  "name": "monarch",
+  "pages": 4,
+  "perPage": 24,
+  "cols": 4,
   "count": 77,
   "cell": [
-    576,
-    324
+    960,
+    540
   ],
   "source": {
     "w": 1280,
