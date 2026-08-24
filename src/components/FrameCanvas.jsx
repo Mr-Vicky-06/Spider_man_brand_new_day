@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useAtlas, cellRect } from '../lib/useAtlas';
+import { useAtlas, nearestLoaded } from '../lib/useAtlas';
 
 /**
  * Draws an atlas sequence, cover-fitted to its box.
@@ -24,7 +24,7 @@ export default function FrameCanvas({
 }) {
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
-  const { pages, meta, ready } = useAtlas(name);
+  const { framesRef, loadedRef, meta, ready } = useAtlas(name);
 
   useEffect(() => {
     if (!ready) return;
@@ -94,10 +94,12 @@ export default function FrameCanvas({
     }
 
     function blit(index, alpha) {
-      const [page, sx, sy, sw, sh] = cellRect(meta, index);
-      const [dx, dy, dw, dh] = place(sw, sh);
+      // frames stream in, so fall back to the closest one that has decoded
+      const im = nearestLoaded(framesRef.current, index);
+      if (!im) return;
+      const [dx, dy, dw, dh] = place(im.naturalWidth, im.naturalHeight);
       ctx.globalAlpha = alpha;
-      ctx.drawImage(pages[page], sx, sy, sw, sh, dx, dy, dw, dh);
+      ctx.drawImage(im, dx, dy, dw, dh);
     }
 
     function draw(fi) {
@@ -132,7 +134,10 @@ export default function FrameCanvas({
         fi += (Math.round(fi) - fi) * e;
       }
 
-      if (Math.abs(fi - drawnAt) > 0.003) {
+      // While frames are still arriving, repaint every tick so a stand-in gets
+      // replaced the moment its real frame decodes.
+      const streaming = loadedRef.current < meta.count;
+      if (Math.abs(fi - drawnAt) > 0.003 || streaming) {
         drawnAt = fi;
         draw(fi);
       }
@@ -164,7 +169,7 @@ export default function FrameCanvas({
       ro.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [ready, pages, meta, progressRef, ease, focusY, fit, zoom, onReady]);
+  }, [ready, framesRef, loadedRef, meta, progressRef, ease, focusY, fit, zoom, onReady]);
 
   return (
     <div ref={wrapRef} className={`frame-canvas ${ready ? 'is-ready' : ''} ${className}`}>

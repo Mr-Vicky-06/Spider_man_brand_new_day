@@ -1,65 +1,71 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /**
- * Loads a paged frame atlas (see scripts/pack_frames.py) and its metadata.
+ * Loads a sequence of individual frames (see scripts/pack_frames.py).
  *
- * The sequence is split across several sheets because one sheet at usable
- * resolution would be too large for a browser to decode. Small screens and
- * low-DPR displays get the ".half" set, a quarter of the pixels.
+ * Every frame is its own file at native resolution — no sprite sheet, which
+ * at this size no browser would decode in one image. All of them start
+ * loading at once and the canvas draws whatever has arrived, so the section
+ * is usable long before the last frame lands.
+ *
+ * Small screens and low-DPR displays get the half-size set.
  */
 export function useAtlas(name) {
-  const [state, setState] = useState({ pages: null, meta: null, ready: false });
+  const framesRef = useRef([]);
+  const loadedRef = useRef(0);
+  const [state, setState] = useState({ meta: null, ready: false });
 
   useEffect(() => {
     let cancelled = false;
     const base = import.meta.env.BASE_URL;
     const half =
       window.innerWidth < 900 || (window.devicePixelRatio || 1) < 1.5;
-
-    function load(src) {
-      return new Promise((res, rej) => {
-        const img = new Image();
-        img.decoding = 'async';
-        img.onload = () => res(img);
-        img.onerror = rej;
-        img.src = src;
-      });
-    }
+    const dir = half ? `${name}-half` : name;
 
     fetch(`${base}frames/${name}.json`)
       .then(r => r.json())
-      .then(async meta => {
-        const suffix = half ? '.half' : '';
-        const pages = await Promise.all(
-          Array.from({ length: meta.pages }, (_, i) =>
-            load(`${base}frames/${name}-${i}${suffix}.webp`)
-          )
-        );
+      .then(meta => {
         if (cancelled) return;
-        const cell = half ? meta.cell.map(v => v / 2) : meta.cell;
-        setState({ pages, meta: { ...meta, cell }, ready: true });
+
+        const frames = new Array(meta.count);
+        loadedRef.current = 0;
+        const count = () => { loadedRef.current += 1; };
+        for (let i = 0; i < meta.count; i++) {
+          const img = new Image();
+          img.decoding = 'async';
+          // the opening frames decide how soon the section can be shown
+          if (i < 4) img.fetchPriority = 'high';
+          img.addEventListener('load', count, { once: true });
+          img.addEventListener('error', count, { once: true });
+          img.src = `${base}frames/${dir}/${String(i).padStart(3, '0')}.webp`;
+          frames[i] = img;
+        }
+        framesRef.current = frames;
+
+        const first = frames[0];
+        const show = () => !cancelled && setState({ meta, ready: true });
+        if (first.complete && first.naturalWidth) show();
+        else first.onload = show;
       })
       .catch(() => {});
 
     return () => {
       cancelled = true;
+      framesRef.current = [];
+      loadedRef.current = 0;
     };
   }, [name]);
 
-  return state;
+  return { framesRef, loadedRef, meta: state.meta, ready: state.ready };
 }
 
-/** Which sheet frame `index` lives on, and where on it. */
-export function cellRect(meta, index) {
-  const [cw, ch] = meta.cell;
-  const i = Math.max(0, Math.min(meta.count - 1, index));
-  const page = Math.floor(i / meta.perPage);
-  const slot = i % meta.perPage;
-  return [
-    page,
-    (slot % meta.cols) * cw,
-    Math.floor(slot / meta.cols) * ch,
-    cw,
-    ch
-  ];
+/** The frame at `index`, or the nearest one that has actually decoded. */
+export function nearestLoaded(frames, index) {
+  const ok = im => im && im.complete && im.naturalWidth > 0;
+  if (ok(frames[index])) return frames[index];
+  for (let d = 1; d < frames.length; d++) {
+    if (ok(frames[index - d])) return frames[index - d];
+    if (ok(frames[index + d])) return frames[index + d];
+  }
+  return null;
 }

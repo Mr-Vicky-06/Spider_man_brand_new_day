@@ -28,28 +28,29 @@ Pushed to `main`, GitHub Actions builds and publishes to GitHub Pages
 
 ## Frames
 
-The two source sequences (160 PNGs, ~176 MB) are packed into webp sprite atlases:
-
 ```bash
 python scripts/pack_frames.py     # reads ../_raw/, writes public/frames/
 ```
 
-The packer does more than resize:
+Each sequence is written as **individual webp files at the source's native
+1280x720**, not a sprite sheet. A sheet large enough to hold a sequence at
+this resolution is far past what a browser will decode in one image, and
+shrinking one to fit read as blur on a full-bleed stage.
 
-- **awaken** — the source sits on a near-white background. Pixels that are
-  bright, desaturated *and* connected to the frame edge are keyed out to the
-  page's ink, so the section can be dark without punching holes in his face.
-- **monarch** — the source camera drifts and zooms in ~16% over the sequence.
-  Each frame is template-matched against Jin-Woo's head and re-framed so he
-  stays put. The dragon's head is then located per frame, and only the longest
-  run that sweeps steadily left-to-right is kept (19 of 80 frames). Those
-  positions ship in the metadata as `dragonX`.
+A half-size set is written alongside; the runtime picks it on small screens
+and low-DPR displays. Full is ~7.8 MB across both sequences, half ~3.7 MB —
+a visitor loads one or the other.
 
-Each sequence gets a full atlas and a `.half` atlas; `useAtlas` picks the half
-on small screens and low-DPR displays. Total shipped payload is ~2.5 MB.
+The packer also:
 
-The full atlas is kept at or under ≈15 Mpx so it stays inside iOS Safari's
-image-decode ceiling.
+- **awaken** — keys out the near-white backdrop. Pixels that are bright,
+  desaturated *and* connected to the frame edge become the page's ink, so the
+  section can be dark without punching holes in his face.
+- **both** — paints out the generator's corner sparkle with nearby background.
+- **monarch** — drops the closing frames, which cut to a much tighter shot.
+
+Frames stream in parallel and the canvas draws the nearest one that has
+decoded, so a section is usable well before the last frame lands.
 
 ## Structure
 

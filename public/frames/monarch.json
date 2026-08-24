@@ -1,15 +1,6 @@
 {
   "name": "monarch",
-  "pages": 4,
-  "perPage": 24,
-  "cols": 4,
   "count": 77,
-  "cell": [
-    960,
-    540
-  ],
-  "source": {
-    "w": 1280,
-    "h": 720
-  }
+  "w": 1280,
+  "h": 720
 }
