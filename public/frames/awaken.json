@@ -1,0 +1,14 @@
+{
+  "file": "awaken.webp",
+  "cols": 9,
+  "rows": 9,
+  "count": 80,
+  "cell": [
+    576,
+    324
+  ],
+  "source": {
+    "w": 1280,
+    "h": 720
+  }
+}
