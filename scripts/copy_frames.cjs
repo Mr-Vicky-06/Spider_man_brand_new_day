@@ -1,22 +1,29 @@
 const fs = require('fs');
 const path = require('path');
 
-const srcFull = path.join(__dirname, '../public/frames/awaken');
-const srcHalf = path.join(__dirname, '../public/frames/awaken-half');
-const destFull = path.join(__dirname, '../public/frames/scene01');
-const destHalf = path.join(__dirname, '../public/frames/scene01-half');
+function copySequence(sourceName, destName, frameCount) {
+  const srcFull = path.join(__dirname, `../public/frames/${sourceName}`);
+  const srcHalf = path.join(__dirname, `../public/frames/${sourceName}-half`);
+  const destFull = path.join(__dirname, `../public/frames/${destName}`);
+  const destHalf = path.join(__dirname, `../public/frames/${destName}-half`);
 
-if (!fs.existsSync(destFull)) fs.mkdirSync(destFull, { recursive: true });
-if (!fs.existsSync(destHalf)) fs.mkdirSync(destHalf, { recursive: true });
+  if (!fs.existsSync(destFull)) fs.mkdirSync(destFull, { recursive: true });
+  if (!fs.existsSync(destHalf)) fs.mkdirSync(destHalf, { recursive: true });
 
-// Copy first 24 frames
-for (let i = 0; i < 24; i++) {
-  const filename = String(i).padStart(3, '0') + '.webp';
-  if (fs.existsSync(path.join(srcFull, filename))) {
-    fs.copyFileSync(path.join(srcFull, filename), path.join(destFull, filename));
+  for (let i = 0; i < frameCount; i++) {
+    const filename = String(i).padStart(3, '0') + '.webp';
+    if (fs.existsSync(path.join(srcFull, filename))) {
+      fs.copyFileSync(path.join(srcFull, filename), path.join(destFull, filename));
+    }
+    if (fs.existsSync(path.join(srcHalf, filename))) {
+      fs.copyFileSync(path.join(srcHalf, filename), path.join(destHalf, filename));
+    }
   }
-  if (fs.existsSync(path.join(srcHalf, filename))) {
-    fs.copyFileSync(path.join(srcHalf, filename), path.join(destHalf, filename));
-  }
+  console.log(`Copied ${frameCount} frames from ${sourceName} to ${destName}`);
 }
-console.log('Copied 24 frames to scene01 and scene01-half');
+
+// Generate scene01 (using awaken frames as a test)
+copySequence('awaken', 'scene01', 24);
+
+// Generate scene02 (using monarch frames as a test)
+copySequence('monarch', 'scene02', 24);

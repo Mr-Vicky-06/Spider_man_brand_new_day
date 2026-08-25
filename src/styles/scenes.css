@@ -14,7 +14,9 @@
   background: var(--color-void);
 }
 
-/* Scene 01 Prototype Specifics */
+/* ==========================================================================
+   Scene 01 Prototype Specifics
+   ========================================================================== */
 .scene-city-bg {
   position: absolute;
   inset: 0;
@@ -90,4 +92,29 @@
     transform: scaleY(1);
     opacity: 0.8;
   }
+}
+
+/* ==========================================================================
+   Scene 02 Prototype Specifics
+   ========================================================================== */
+.scene-peter-bg {
+  background: var(--color-void);
+}
+
+.peter-frame-canvas {
+  /* Mimic a desk lamp or single practical light source */
+  filter: sepia(30%) hue-rotate(340deg) contrast(1.1) brightness(0.6);
+}
+
+.scene-peter-ui {
+  position: absolute;
+  inset: 0;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  z-index: var(--z-ui);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end; /* Off-center tight crop */
+  text-align: right;
 }

@@ -4,23 +4,21 @@
  */
 import React from 'react';
 import Scene01City from '../scenes/Scene01City';
-
-// The SceneManager tracks the active scene index based on global progress.
-// For Cycle 1, we only have 1 scene.
+import Scene02Peter from '../scenes/Scene02Peter';
 
 export default function SceneManager({ globalProgress }) {
-  // 0.0 to 1.0 logic to determine which scene is active.
-  // In a full implementation, we'd map progress ranges to specific scenes.
-  // Right now, scene 01 takes the whole progress (0 - 1).
+  // We rely on native CSS `position: sticky` and `useScrollProgress` inside 
+  // the scenes to manage their local progress. The SceneManager simply stacks 
+  // them in order, creating a continuous global experience.
   
   const scenes = [
-    { id: 'scene01', component: Scene01City, range: [0, 1] }
+    { id: 'scene01', component: Scene01City },
+    { id: 'scene02', component: Scene02Peter }
   ];
 
   return (
     <div className="scene-manager">
-      {scenes.map((scene, index) => {
-        // Render all registered scenes, they will manage their own sticky/inView behavior
+      {scenes.map((scene) => {
         const SceneComponent = scene.component;
         return (
           <SceneComponent 
