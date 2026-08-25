@@ -36,13 +36,15 @@ function copyStaticFrame(sourceName, sourceFrame, destName, destFilename) {
   }
 }
 
-// Generate scene01 (using awaken frames as a test)
+// Generate scene01
 copySequence('awaken', 'scene01', 24);
 
-// Generate scene02 (using monarch frames as a test)
+// Generate scene02
 copySequence('monarch', 'scene02', 24);
 
-// Generate scene03 static assets
-// Using frame 000 as "unmasked" and frame 023 as "masked" from awaken sequence as placeholders
+// Generate scene03
 copyStaticFrame('awaken', 0, 'scene03', 'unmasked.webp');
 copyStaticFrame('awaken', 23, 'scene03', 'masked.webp');
+
+// Generate scene04
+copyStaticFrame('awaken', 12, 'scene04', 'sense-bg.webp');

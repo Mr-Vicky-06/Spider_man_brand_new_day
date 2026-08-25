@@ -38,6 +38,13 @@ export const AssetManifest = {
         type: "image",
         url: "/frames/scene03/masked.webp"
       }
+    },
+    scene04: {
+      background: {
+        id: "scene04-bg",
+        type: "image",
+        url: "/frames/scene04/sense-bg.webp"
+      }
     }
   }
 };

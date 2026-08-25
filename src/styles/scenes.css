@@ -138,3 +138,26 @@
   align-items: flex-start;
   padding-bottom: 12vh;
 }
+
+/* ==========================================================================
+   Scene 04 Prototype Specifics
+   ========================================================================== */
+.scene-sense-bg {
+  background: var(--color-void);
+}
+
+.scene-sense-camera {
+  will-change: transform;
+}
+
+.scene-sense-ui {
+  position: absolute;
+  inset: 0;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  z-index: var(--z-ui);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
