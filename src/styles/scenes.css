@@ -161,3 +161,84 @@
   justify-content: center;
   align-items: center;
 }
+
+/* ==========================================================================
+   Scene 05 Prototype Specifics
+   ========================================================================== */
+.scene-swing-bg {
+  background: var(--color-void);
+}
+
+.scene-swing-ui {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-ui);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.swing-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.7) 100%);
+  z-index: 1;
+}
+
+.swing-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 2rem;
+}
+
+/* ==========================================================================
+   Scene 06 Prototype Specifics
+   ========================================================================== */
+.scene-finale-bg {
+  background: var(--color-night);
+}
+
+.scene-finale-image-wrapper {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-base);
+}
+
+.scene-finale-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, var(--color-void) 0%, transparent 60%);
+}
+
+.scene-finale-ui {
+  position: absolute;
+  inset: 0;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  z-index: var(--z-ui);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.footer-disclosure {
+  position: absolute;
+  bottom: clamp(1.5rem, 4vw, 3rem);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+}
+
+.foot-rule {
+  width: 40px;
+  height: 1px;
+  background: var(--color-spider-red);
+}

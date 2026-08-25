@@ -48,3 +48,41 @@ copyStaticFrame('awaken', 23, 'scene03', 'masked.webp');
 
 // Generate scene04
 copyStaticFrame('awaken', 12, 'scene04', 'sense-bg.webp');
+
+// Generate scene05
+const scene05Full = path.join(__dirname, `../public/frames/scene05`);
+const scene05Half = path.join(__dirname, `../public/frames/scene05-half`);
+if (!fs.existsSync(scene05Full)) fs.mkdirSync(scene05Full, { recursive: true });
+if (!fs.existsSync(scene05Half)) fs.mkdirSync(scene05Half, { recursive: true });
+
+for (let i = 0; i < 48; i++) {
+  const destFilename = String(i).padStart(3, '0') + '.webp';
+  const sourceName = i < 24 ? 'awaken' : 'monarch';
+  const sourceFrame = String(i % 24).padStart(3, '0') + '.webp';
+  
+  const srcFull = path.join(__dirname, `../public/frames/${sourceName}`);
+  const srcHalf = path.join(__dirname, `../public/frames/${sourceName}-half`);
+
+  if (fs.existsSync(path.join(srcFull, sourceFrame))) {
+    fs.copyFileSync(path.join(srcFull, sourceFrame), path.join(scene05Full, destFilename));
+  }
+  if (fs.existsSync(path.join(srcHalf, sourceFrame))) {
+    fs.copyFileSync(path.join(srcHalf, sourceFrame), path.join(scene05Half, destFilename));
+  }
+}
+
+// Generate 3 static keyframes for reduced-motion in Scene05
+copyStaticFrame('awaken', 0, 'scene05', 'keyframe-1.webp');
+copyStaticFrame('awaken', 12, 'scene05', 'keyframe-2.webp');
+copyStaticFrame('monarch', 23, 'scene05', 'keyframe-3.webp');
+
+const dragonX = [];
+for (let i = 0; i < 48; i++) {
+  const t = i / 47;
+  const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  dragonX.push(eased);
+}
+fs.writeFileSync(path.join(scene05Full, 'metadata.json'), JSON.stringify({ dragonX }, null, 2));
+
+// Generate scene06 (Brand New Day) static hero background
+copyStaticFrame('awaken', 23, 'scene06', 'hero-bg.webp');
