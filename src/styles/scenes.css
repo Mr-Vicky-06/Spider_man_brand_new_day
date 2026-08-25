@@ -1,0 +1,93 @@
+/* src/styles/scenes.css */
+/* Scene Management layout */
+.scene-container {
+  position: relative;
+  width: 100%;
+}
+
+.scene-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: var(--color-void);
+}
+
+/* Scene 01 Prototype Specifics */
+.scene-city-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, var(--color-night) 0%, var(--color-navy) 100%);
+  z-index: var(--z-base);
+}
+
+.scene-city-silhouettes {
+  position: absolute;
+  bottom: 0;
+  left: -10%;
+  width: 120%;
+  height: 60vh;
+  background: 
+    linear-gradient(to bottom, transparent 0%, var(--color-graphite) 10%),
+    repeating-linear-gradient(90deg, transparent 0, transparent 40px, var(--color-void) 40px, var(--color-void) 80px);
+  mask-image: linear-gradient(to top, black 50%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to top, black 50%, transparent 100%);
+  z-index: var(--z-environment);
+}
+
+.scene-city-rain {
+  position: absolute;
+  inset: 0;
+  z-index: calc(var(--z-environment) + 1);
+  pointer-events: none;
+}
+
+.scene-city-ui {
+  position: absolute;
+  inset: 0;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  z-index: var(--z-ui);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.scene-city-title-wrapper {
+  margin-top: 10vh;
+}
+
+/* Scroll Cue */
+.scroll-cue {
+  position: absolute;
+  left: 50%;
+  bottom: var(--spacing-lg);
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-family: var(--font-metadata);
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  color: var(--color-muted-text);
+}
+.cue-line {
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, var(--color-spider-red), transparent);
+  animation: pulse-line 2s infinite ease-in-out;
+}
+@keyframes pulse-line {
+  0%, 100% { transform: scaleY(0.4); opacity: 0.5; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cue-line {
+    animation: none;
+    transform: scaleY(1);
+    opacity: 0.8;
+  }
+}
