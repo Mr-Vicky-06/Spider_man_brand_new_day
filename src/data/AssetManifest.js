@@ -26,6 +26,18 @@ export const AssetManifest = {
         height: 1080,
         format: "webp"
       }
+    },
+    scene03: {
+      unmasked: {
+        id: "scene03-unmasked",
+        type: "image",
+        url: "/frames/scene03/unmasked.webp"
+      },
+      masked: {
+        id: "scene03-masked",
+        type: "image",
+        url: "/frames/scene03/masked.webp"
+      }
     }
   }
 };

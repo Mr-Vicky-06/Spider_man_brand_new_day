@@ -9,7 +9,12 @@ export default function RevealStage({
   bottom,
   top,
   overlay = 'rgba(6,8,16,0.55)',
-  trailLength = 16
+  trailLength = 16,
+  trailColor = '159,228,255', // RGB string
+  trailOpacity = 1.0,
+  trailWidth = 1.0,
+  trailIntensity = 1.0,
+  trailBlur = 0
 }) {
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
@@ -18,11 +23,11 @@ export default function RevealStage({
   useEffect(() => {
     const wrap = wrapRef.current;
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const off = document.createElement('canvas');
-    const offc = off.getContext('2d');
+    const offc = off.getContext('2d', { willReadFrequently: true });
 
     let w = 0, h = 0, dpr = 1, radius = 160;
     let raf = null;
@@ -56,11 +61,9 @@ export default function RevealStage({
     }
 
     function draw() {
-      // The lens belongs to the pointer: it rests where it was left rather
-      // than wandering the frame by itself.
       if (smooth.x < -1000 && touched) { smooth.x = pointer.x; smooth.y = pointer.y; }
-      smooth.x += (pointer.x - smooth.x) * 0.13;
-      smooth.y += (pointer.y - smooth.y) * 0.13;
+      smooth.x += (pointer.x - smooth.x) * (reduced ? 0.2 : 0.13);
+      smooth.y += (pointer.y - smooth.y) * (reduced ? 0.2 : 0.13);
 
       if (touched) {
         trail.unshift({ x: smooth.x, y: smooth.y });
@@ -69,29 +72,25 @@ export default function RevealStage({
 
       ctx.clearRect(0, 0, w, h);
       const cb = cover(imgs.bottom);
-      // Grade the base down. The two portraits are near-identical across the
-      // suit, so without this the lens looks like it is doing nothing there.
       ctx.filter = 'grayscale(1) brightness(0.62) contrast(1.05)';
       ctx.drawImage(imgs.bottom, cb[0], cb[1], cb[2], cb[3]);
       ctx.filter = 'none';
       ctx.fillStyle = overlay;
       ctx.fillRect(0, 0, w, h);
 
-      // build the lens mask, then paint the top image only inside it
       offc.clearRect(0, 0, w, h);
       offc.globalCompositeOperation = 'source-over';
       for (let i = 0; i < trail.length; i++) {
         const k = 1 - i / trail.length;
-        const r = radius * (0.28 + 0.72 * k);
+        const r = radius * (0.28 + 0.72 * k) * trailWidth;
         const a = Math.pow(k, 1.5);
-        // a soft-edged disc, so the reveal feathers out instead of cutting
         const g = offc.createRadialGradient(
           trail[i].x, trail[i].y, 0,
           trail[i].x, trail[i].y, r
         );
         g.addColorStop(0, `rgba(0,0,0,${a})`);
-        g.addColorStop(0.82, `rgba(0,0,0,${a})`);   // solid core
-        g.addColorStop(1, 'rgba(0,0,0,0)');         // thin feathered rim
+        g.addColorStop(0.82, `rgba(0,0,0,${a})`);
+        g.addColorStop(1, 'rgba(0,0,0,0)');
         offc.beginPath();
         offc.arc(trail[i].x, trail[i].y, r, 0, Math.PI * 2);
         offc.fillStyle = g;
@@ -101,22 +100,27 @@ export default function RevealStage({
       const ct = cover(imgs.top);
       offc.drawImage(imgs.top, ct[0], ct[1], ct[2], ct[3]);
       offc.globalCompositeOperation = 'source-over';
+      
+      if (trailBlur > 0) {
+         ctx.filter = `blur(${trailBlur}px)`;
+      }
       ctx.drawImage(off, 0, 0, w, h);
+      ctx.filter = 'none';
 
-      // cyan bloom and rim on the head of the trail
       const head = trail[0];
       if (head) {
+        const tr = radius * trailWidth;
         ctx.beginPath();
-        ctx.arc(head.x, head.y, radius * 0.98, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(159,228,255,0.28)';
+        ctx.arc(head.x, head.y, tr * 0.98, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${trailColor},${0.28 * trailOpacity})`;
         ctx.lineWidth = 1.5;
         ctx.stroke();
-        const g = ctx.createRadialGradient(head.x, head.y, 0, head.x, head.y, radius * 1.5);
-        g.addColorStop(0, 'rgba(190,235,255,0.22)');
-        g.addColorStop(0.45, 'rgba(56,160,255,0.14)');
+        const g = ctx.createRadialGradient(head.x, head.y, 0, head.x, head.y, tr * 1.5);
+        g.addColorStop(0, `rgba(${trailColor},${0.22 * trailIntensity})`);
+        g.addColorStop(0.45, `rgba(${trailColor},${0.14 * trailIntensity})`);
         g.addColorStop(1, 'rgba(0,0,0,0)');
         ctx.beginPath();
-        ctx.arc(head.x, head.y, radius * 1.5, 0, Math.PI * 2);
+        ctx.arc(head.x, head.y, tr * 1.5, 0, Math.PI * 2);
         ctx.fillStyle = g;
         ctx.fill();
       }
@@ -126,19 +130,47 @@ export default function RevealStage({
 
     function onMove(e) {
       const r = wrap.getBoundingClientRect();
-      const p = e.touches ? e.touches[0] : e;
+      let p;
+      if (e.touches) {
+        if (e.touches.length > 0) p = e.touches[0];
+        else return;
+      } else {
+        p = e;
+      }
       const x = p.clientX - r.left;
       const y = p.clientY - r.top;
-      if (x < 0 || y < 0 || x > r.width || y > r.height) return;
+      // Expand bounds slightly to prevent hard clipping at edges on mobile
+      if (x < -50 || y < -50 || x > r.width + 50 || y > r.height + 50) return;
       pointer.x = x;
       pointer.y = y;
+      
+      if (!touched) {
+          smooth.x = x;
+          smooth.y = y;
+          touched = true;
+      }
+    }
+    
+    // Provide a subtle default hint state
+    function setupDefaultHint() {
+      pointer.x = w * 0.2;
+      pointer.y = h * 0.8;
+      smooth.x = w * 0.2;
+      smooth.y = h * 0.8;
       touched = true;
+      for (let i = 0; i < trailLength; i++) {
+          trail.push({ x: w * 0.2, y: h * 0.8 });
+      }
     }
 
     function start() {
       resize();
       setReady(true);
-      if (reduced) { draw(); cancelAnimationFrame(raf); raf = null; return; }
+      setupDefaultHint();
+      if (reduced) { 
+         // Reduced motion uses a single static render or slow interval instead of rAF
+         trailLength = 2; // Minimize trail calculation
+      }
       raf = requestAnimationFrame(draw);
     }
 
@@ -162,11 +194,11 @@ export default function RevealStage({
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('touchmove', onMove);
     };
-  }, [bottom, top, overlay, trailLength]);
+  }, [bottom, top, overlay, trailLength, trailColor, trailOpacity, trailWidth, trailIntensity, trailBlur]);
 
   return (
     <div ref={wrapRef} className={`reveal-stage ${ready ? 'is-ready' : ''}`}>
-      <canvas ref={canvasRef} aria-label="Sung Jin-Woo, revealed" role="img" />
+      <canvas ref={canvasRef} aria-label="Interactive reveal scene" role="img" />
     </div>
   );
 }

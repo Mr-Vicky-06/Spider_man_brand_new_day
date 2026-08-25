@@ -118,3 +118,23 @@
   align-items: flex-end; /* Off-center tight crop */
   text-align: right;
 }
+
+/* ==========================================================================
+   Scene 03 Prototype Specifics
+   ========================================================================== */
+.scene-mask-bg {
+  background: var(--color-void);
+}
+
+.scene-mask-ui {
+  position: absolute;
+  inset: 0;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  z-index: var(--z-ui);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding-bottom: 12vh;
+}

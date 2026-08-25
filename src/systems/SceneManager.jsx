@@ -5,6 +5,7 @@
 import React from 'react';
 import Scene01City from '../scenes/Scene01City';
 import Scene02Peter from '../scenes/Scene02Peter';
+import Scene03Mask from '../scenes/Scene03Mask';
 
 export default function SceneManager({ globalProgress }) {
   // We rely on native CSS `position: sticky` and `useScrollProgress` inside 
@@ -13,7 +14,8 @@ export default function SceneManager({ globalProgress }) {
   
   const scenes = [
     { id: 'scene01', component: Scene01City },
-    { id: 'scene02', component: Scene02Peter }
+    { id: 'scene02', component: Scene02Peter },
+    { id: 'scene03', component: Scene03Mask }
   ];
 
   return (
